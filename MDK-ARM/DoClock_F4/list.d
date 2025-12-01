@@ -1,0 +1,12 @@
+doclock_f4\list.o: ../Middlewares/Third_Party/FreeRTOS/Source/list.c
+doclock_f4\list.o: E:\Keil5_Pro\ARM\ARMCC\Bin\..\include\stdlib.h
+doclock_f4\list.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
+doclock_f4\list.o: E:\Keil5_Pro\ARM\ARMCC\Bin\..\include\stddef.h
+doclock_f4\list.o: E:\Keil5_Pro\ARM\ARMCC\Bin\..\include\stdint.h
+doclock_f4\list.o: ../Core/Inc/FreeRTOSConfig.h
+doclock_f4\list.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
+doclock_f4\list.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h
+doclock_f4\list.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
+doclock_f4\list.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
+doclock_f4\list.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
+doclock_f4\list.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h

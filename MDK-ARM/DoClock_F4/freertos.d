@@ -50,3 +50,5 @@ doclock_f4\freertos.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.
 doclock_f4\freertos.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 doclock_f4\freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h
 doclock_f4\freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h
+doclock_f4\freertos.o: ../Core/Inc/key.h
+doclock_f4\freertos.o: ../Core/Inc/OLED.h

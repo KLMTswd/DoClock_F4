@@ -22,6 +22,8 @@
 #include "stm32f4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "key.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -31,6 +33,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+static uint32_t last_interrupt_time = 0;
 
 /* USER CODE END PD */
 
@@ -160,6 +164,50 @@ void DebugMon_Handler(void)
 /******************************************************************************/
 
 /**
+  * @brief This function handles EXTI line1 interrupt.
+  */
+void EXTI1_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI1_IRQn 0 */
+
+  /* USER CODE END EXTI1_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(EXTI_K210_Pin);
+  /* USER CODE BEGIN EXTI1_IRQn 1 */
+
+  /* USER CODE END EXTI1_IRQn 1 */
+}
+
+/**
+  * @brief This function handles EXTI line4 interrupt.
+  */
+void EXTI4_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI4_IRQn 0 */
+
+  /* USER CODE END EXTI4_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(col_1_Pin);
+  /* USER CODE BEGIN EXTI4_IRQn 1 */
+
+  /* USER CODE END EXTI4_IRQn 1 */
+}
+
+/**
+  * @brief This function handles EXTI line[9:5] interrupts.
+  */
+void EXTI9_5_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI9_5_IRQn 0 */
+
+  /* USER CODE END EXTI9_5_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(col_2_Pin);   // 调用HAL库的中断处理函数
+  HAL_GPIO_EXTI_IRQHandler(col_3_Pin);
+  HAL_GPIO_EXTI_IRQHandler(col_4_Pin);
+  /* USER CODE BEGIN EXTI9_5_IRQn 1 */
+
+  /* USER CODE END EXTI9_5_IRQn 1 */
+}
+
+/**
   * @brief This function handles TIM1 trigger and commutation interrupts and TIM11 global interrupt.
   */
 void TIM1_TRG_COM_TIM11_IRQHandler(void)
@@ -174,5 +222,25 @@ void TIM1_TRG_COM_TIM11_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;  // 用于标记是否需要进行任务切换
+    uint32_t current_time = HAL_GetTick();         // 获取当前系统时间
+    
+  // 按键消抖：两次中断间隔大于消抖阈值(KEY_DEBOUNCE_MS)才处理
+    if((current_time - last_interrupt_time) > KEY_DEBOUNCE_MS )
+    {
+      // 发送一个信号到队列，通知按键扫描任务执行实际的按键检测
+        uint8_t dummy_val = 0;  // 占位值，仅用于通知任务
+        xQueueSendToBackFromISR(xKeyIntQueueHandle, &dummy_val, &xHigherPriorityTaskWoken);
+    }	
+    
+    last_interrupt_time = current_time;  // 更新最后一次中断时间
+    
+  // 如果队列操作导致更高优先级任务就绪，则进行任务切换
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+
 
 /* USER CODE END 1 */

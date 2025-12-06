@@ -1,6 +1,19 @@
 {
     "files.associations": {
         "key.h": "c",
-        "oled.h": "c"
+        "oled.h": "c",
+        "freertos.h": "c",
+        "menu.h": "c",
+        "stm32f4xx_hal.h": "c",
+        "string": "c",
+        "string.h": "c",
+        "oled_font.h": "c",
+        "queue.h": "c",
+        "adc.h": "c",
+        "cmsis_os.h": "c",
+        "main.h": "c",
+        "cmsis_os2.h": "c",
+        "rtc.h": "c",
+        "gpio.h": "c"
     }
 }

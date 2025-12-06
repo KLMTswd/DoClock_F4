@@ -29,8 +29,6 @@ doclock_f4\stm32f4xx_hal_msp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ha
 doclock_f4\stm32f4xx_hal_msp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash.h
 doclock_f4\stm32f4xx_hal_msp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ex.h
 doclock_f4\stm32f4xx_hal_msp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h
-doclock_f4\stm32f4xx_hal_msp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c.h
-doclock_f4\stm32f4xx_hal_msp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c_ex.h
 doclock_f4\stm32f4xx_hal_msp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h
 doclock_f4\stm32f4xx_hal_msp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
 doclock_f4\stm32f4xx_hal_msp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rtc.h
@@ -39,3 +37,14 @@ doclock_f4\stm32f4xx_hal_msp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ha
 doclock_f4\stm32f4xx_hal_msp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 doclock_f4\stm32f4xx_hal_msp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 doclock_f4\stm32f4xx_hal_msp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
+doclock_f4\stm32f4xx_hal_msp.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/freertos.h
+doclock_f4\stm32f4xx_hal_msp.o: ../Core/Inc/FreeRTOSConfig.h
+doclock_f4\stm32f4xx_hal_msp.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
+doclock_f4\stm32f4xx_hal_msp.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h
+doclock_f4\stm32f4xx_hal_msp.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
+doclock_f4\stm32f4xx_hal_msp.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
+doclock_f4\stm32f4xx_hal_msp.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
+doclock_f4\stm32f4xx_hal_msp.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h
+doclock_f4\stm32f4xx_hal_msp.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/Queue.h
+doclock_f4\stm32f4xx_hal_msp.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
+doclock_f4\stm32f4xx_hal_msp.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h

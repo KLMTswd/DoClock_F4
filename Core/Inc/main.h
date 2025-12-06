@@ -31,6 +31,9 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "freertos.h"
+#include "cmsis_os2.h"
+#include "Queue.h"
 
 /* USER CODE END Includes */
 
@@ -63,24 +66,33 @@ void Error_Handler(void);
 #define row_1_GPIO_Port GPIOC
 #define row_2_Pin GPIO_PIN_1
 #define row_2_GPIO_Port GPIOC
-#define row3_Pin GPIO_PIN_2
-#define row3_GPIO_Port GPIOC
+#define row_3_Pin GPIO_PIN_2
+#define row_3_GPIO_Port GPIOC
 #define row_4_Pin GPIO_PIN_3
 #define row_4_GPIO_Port GPIOC
 #define EXTI_K210_Pin GPIO_PIN_1
 #define EXTI_K210_GPIO_Port GPIOA
+#define EXTI_K210_EXTI_IRQn EXTI1_IRQn
 #define CS_Pin GPIO_PIN_4
 #define CS_GPIO_Port GPIOA
 #define col_1_Pin GPIO_PIN_4
 #define col_1_GPIO_Port GPIOC
+#define col_1_EXTI_IRQn EXTI4_IRQn
 #define col_2_Pin GPIO_PIN_5
 #define col_2_GPIO_Port GPIOC
+#define col_2_EXTI_IRQn EXTI9_5_IRQn
 #define col_3_Pin GPIO_PIN_8
 #define col_3_GPIO_Port GPIOC
+#define col_3_EXTI_IRQn EXTI9_5_IRQn
 #define col_4_Pin GPIO_PIN_9
 #define col_4_GPIO_Port GPIOC
+#define col_4_EXTI_IRQn EXTI9_5_IRQn
 
 /* USER CODE BEGIN Private defines */
+
+extern osMessageQueueId_t xKeyIntQueueHandle;
+extern osMessageQueueId_t xKeyValueQueueHandle;
+
 
 /* USER CODE END Private defines */
 

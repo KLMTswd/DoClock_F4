@@ -28,6 +28,9 @@
 
 #include "key.h"
 #include "OLED.h"
+#include "menu.h"
+#include "string.h"
+#include "queue.h"
 
 /* USER CODE END Includes */
 
@@ -39,21 +42,11 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
-	uint8_t SetLoop = 1;
-	uint8_t LED_mode = 0;
-	uint8_t StartMenu1 = 1;	
-	uint8_t StartMenu2 = 0;
-	uint8_t StartMenu3 = 0;	
-  uint8_t SelectMenu2 = 0;
-  uint8_t SelectMenu3 = 0;	
-	uint8_t Menu1_InitHandle = 1;
-	uint8_t Menu2_InitHandle = 1;
-
   
 /* USER CODE END PM */
 
@@ -89,6 +82,30 @@ const osThreadAttr_t Menu3_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
+/* Definitions for KeyScan */
+osThreadId_t KeyScanHandle;
+const osThreadAttr_t KeyScan_attributes = {
+  .name = "KeyScan",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for KeyProcess */
+osThreadId_t KeyProcessHandle;
+const osThreadAttr_t KeyProcess_attributes = {
+  .name = "KeyProcess",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for xKeyIntQueue */
+osMessageQueueId_t xKeyIntQueueHandle;
+const osMessageQueueAttr_t xKeyIntQueue_attributes = {
+  .name = "xKeyIntQueue"
+};
+/* Definitions for xKeyValueQueue */
+osMessageQueueId_t xKeyValueQueueHandle;
+const osMessageQueueAttr_t xKeyValueQueue_attributes = {
+  .name = "xKeyValueQueue"
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -99,6 +116,8 @@ void StartDefaultTask(void *argument);
 void vTaskMenu1(void *argument);
 void vTaskMenu2(void *argument);
 void vTaskMenu3(void *argument);
+void vTaskKeyScan(void *argument);
+void vTaskKeyProcess(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -124,6 +143,13 @@ void MX_FREERTOS_Init(void) {
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
 
+  /* Create the queue(s) */
+  /* creation of xKeyIntQueue */
+  xKeyIntQueueHandle = osMessageQueueNew (10, sizeof(uint16_t), &xKeyIntQueue_attributes);
+
+  /* creation of xKeyValueQueue */
+  xKeyValueQueueHandle = osMessageQueueNew (16, sizeof(uint16_t), &xKeyValueQueue_attributes);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -140,6 +166,12 @@ void MX_FREERTOS_Init(void) {
 
   /* creation of Menu3 */
   Menu3Handle = osThreadNew(vTaskMenu3, NULL, &Menu3_attributes);
+
+  /* creation of KeyScan */
+  KeyScanHandle = osThreadNew(vTaskKeyScan, NULL, &KeyScan_attributes);
+
+  /* creation of KeyProcess */
+  KeyProcessHandle = osThreadNew(vTaskKeyProcess, NULL, &KeyProcess_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -161,6 +193,7 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
+  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
   /* Infinite loop */
   for(;;)
   {
@@ -183,106 +216,35 @@ void vTaskMenu1(void *argument)
 	osDelay(100);    
 	OLED_Init();				
 	OLED_Clear();
+  
 
   /* Infinite loop */
   for(;;)
   {
-      // 菜单初始化标志检查
-      // 当Menu1_InitHandle为1时，执行菜单初始化显示
-      if(Menu1_InitHandle == 1)      
-      {
-        // 在OLED第1行第1列显示STM32型号
-          OLED_ShowString(1,1,"STM32f103c8t6");  
+    OLED_ShowString(1, 1, "Hello MyFriend!");
+    // // 只在当前是第一级菜单时执行
+    //   if (currentMenuLevel == 1) 
+    //   {
+    //   // 菜单初始化显示
+    //     if (menuNeedsInit[1] == 1) 
+    //     {      
+    //       // 使用通用函数显示菜单
+    //       displayMenu(&menuData[0], currentSelection);
 
-        // 在第2行第2列显示选择标记
-          OLED_ShowString(2,2,"*");  
+    //       // 标记第一级菜单已初始化
+    //       menuNeedsInit[1] = 0;      
 
-        // 在第2行第3列显示第一个菜单项
-          OLED_ShowString(2,3,"1.configurtion");
+    //     }
+        
+    //   // 处理按键
+    //     if (Key_Num != 0) 
+    //     {
+    //       // 使用通用导航函数处理菜单导航
+    //         navigateMenu(Key_Num);
 
-        // 在第3行第3列显示第二个菜单项
-          OLED_ShowString(3,3,"2.kaomoji");
-
-        // 在第4行第3列显示第三个菜单项
-          OLED_ShowString(4,3,"3.LED showtime");  
-
-        // 初始化完成，设置标志为0以避免重复初始化
-          Menu1_InitHandle = 0;      
-      }
-      
-      
-      // 检查是否启用第一级菜单显示
-      if(StartMenu1 == 1)
-      {
-          // 检查是否按下选择键（Key_Num为1表示向下选择键）
-          if(Key_Num == 1)
-          {
-              // 处理选择标记向下移动的逻辑
-              
-              // 当选择索引为1且按下向下键时
-              if(SetLoop == 1 && Key_Num == 1)
-              {
-                  // 清除当前行的选择标记
-                  OLED_ShowString(2,2," ");  
-                  // 在第二行显示选择标记
-                  OLED_ShowString(3,2,"*");  
-                  // 清除第三行的选择标记
-                  OLED_ShowString(4,2," ");  
-                  // 清除按键标志
-                  Key_Num = 0;
-                  // 选择索引增加，移动到下一项
-                  SetLoop ++;
-              }
-  
-              // 当选择索引为2且按下向下键时
-              if(SetLoop == 2 && Key_Num == 1)
-              {
-                  // 清除第一行的选择标记
-                  OLED_ShowString(2,2," ");  
-                  // 清除第二行的选择标记
-                  OLED_ShowString(3,2," ");  
-                  // 在第三行显示选择标记
-                  OLED_ShowString(4,2,"*");  
-                  // 清除按键标志
-                  Key_Num = 0;
-                  // 选择索引增加，准备循环回到第一项
-                  SetLoop ++;
-              }
-  
-              // 当选择索引为3且按下向下键时，循环回到第一项
-              if(SetLoop == 3 && Key_Num == 1)
-              {
-                  // 在第一行显示选择标记
-                  OLED_ShowString(2,2,"*");  
-                  // 清除第二行的选择标记
-                  OLED_ShowString(3,2," ");  
-                  // 清除第三行的选择标记
-                  OLED_ShowString(4,2," ");  
-                  // 清除按键标志
-                  Key_Num = 0;
-                  // 重置选择索引为1，实现循环选择
-                  SetLoop = 1;
-              }
-          }
-          
-          // 检查是否按下确认键（Key_Num为2表示确认选择键）
-          if(Key_Num == 2)
-          {
-              // 清除OLED屏幕内容，准备显示下一级菜单
-              OLED_Clear();
-              // 关闭第一级菜单显示标志
-              StartMenu1 = 0;
-              // 开启第二级菜单显示标志
-              StartMenu2 = 1;
-              // 保存当前选择的菜单项索引到SelectMenu2变量
-              SelectMenu2 = SetLoop;
-              // 重置选择索引，为下次显示第一级菜单做准备
-              SetLoop = 1;
-              // 清除按键标志
-              Key_Num = 0;
-          }
-      }
-      
+    //     }
+    //   }
+            
       // 任务延时100ms，让出CPU给其他任务
       osDelay(100);
   }
@@ -302,145 +264,28 @@ void vTaskMenu2(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    // 检查是否启用第二级菜单显示
-    if(StartMenu2 == 1)
-    {
-      // 根据从一级菜单选择的选项(SelectMenu2)显示不同的二级菜单内容
+    // // 只在当前是第二级菜单时执行
+    // if (currentMenuLevel == 2) 
+    // {
+
+    // // 使用getCurrentMenu获取当前活动菜单
+    //   MenuItem* currentMenu = getCurrentMenu();
       
-      // 当选择配置菜单(configuration)且需要初始化时
-      if(SelectMenu2 == 1 && Menu2_InitHandle == 1)
-      {
-      // 显示标题"Configuration"
-        OLED_ShowString(1,1,"Configuration");
-      // 显示第一个子选项
-        OLED_ShowString(2,3,"1.frequency");
-      // 显示第二个子选项
-        OLED_ShowString(3,3,"2.peripheral");
-      // 初始化完成，设置标志为0以避免重复初始化
-        Menu2_InitHandle = 0;
-      }
+    // // 菜单初始化显示
+    //   if (menuNeedsInit[2] == 1 && currentMenu != NULL) 
+    //   {
+    //     // 使用通用函数显示菜单
+    //       displayMenu(currentMenu, currentSelection);
+    //     // 标记第二级菜单已初始化
+    //       menuNeedsInit[2] = 0;
+    //   }
       
-    // 当选择颜文字菜单(Kaomoji)且需要初始化时
-      if(SelectMenu2 == 2 && Menu2_InitHandle == 1)
-      {
-     // 显示标题"Kaomoji"
-        OLED_ShowString(1,1,"Kaomoji");
-     // 显示子选项1
-        OLED_ShowString(2,3,"1.cute");
-     // 显示子选项2
-        OLED_ShowString(3,3,"2.classic");
-     // 显示子选项3
-        OLED_ShowString(4,3,"3.crazy");
-     // 初始化完成，设置标志为0以避免重复初始化
-        Menu2_InitHandle = 0;
-      }
-      
-      // 当选择LED显示菜单(LED showtime)且需要初始化时
-      if(SelectMenu2 == 3 && Menu2_InitHandle == 1)
-      {
-      // 显示标题"LED showtime"
-        OLED_ShowString(1,1,"LED showtime");
-      // 显示子选项1
-        OLED_ShowString(2,3,"1.Strobe");
-      // 显示子选项2
-        OLED_ShowString(3,3,"2.Waring");
-      // 显示子选项3
-        OLED_ShowString(4,3,"3.DiffSpeed");
-      // 初始化完成，设置标志为0以避免重复初始化
-        Menu2_InitHandle = 0;
-      }
-      
-      // 处理按键操作
-      if(Key_Num == 1)
-      {
-        // 检查是否按下向下选择键
-        if(Key_Num == 1)
-        {
-          // 处理选择标记向下移动的逻辑
-          
-          // 当选择索引为1且按下向下键时
-          if(SetLoop == 1 && Key_Num == 1)
-          {
-            // 清除当前行的选择标记
-            OLED_ShowString(2,2," ");
-            // 在第二行显示选择标记
-            OLED_ShowString(3,2,"*");
-            // 清除第三行的选择标记
-            OLED_ShowString(4,2," ");
-            // 清除按键标志
-            Key_Num = 0;
-            // 选择索引增加，移动到下一项
-            SetLoop ++;
-          }
-          
-          // 当选择索引为2且按下向下键时
-          if(SetLoop == 2 && Key_Num == 1)
-          {
-            // 清除第一行的选择标记
-            OLED_ShowString(2,2," ");
-            // 清除第二行的选择标记
-            OLED_ShowString(3,2," ");
-            // 在第三行显示选择标记
-            OLED_ShowString(4,2,"*");
-            // 清除按键标志
-            Key_Num = 0;
-            // 选择索引增加，准备循环回到第一项
-            SetLoop ++;
-          }
-          
-          // 当选择索引为3且按下向下键时，循环回到第一项
-          if(SetLoop == 3 && Key_Num == 1)
-          {
-            // 在第一行显示选择标记
-            OLED_ShowString(2,2,"*");
-            // 清除第二行的选择标记
-            OLED_ShowString(3,2," ");
-            // 清除第三行的选择标记
-            OLED_ShowString(4,2," ");
-            // 清除按键标志
-            Key_Num = 0;
-            // 重置选择索引为1，实现循环选择
-            SetLoop = 1;
-          }
-        }
-      }
-    }
-    
-    // 检查是否按下确认键(Key_Num为2)
-    if(Key_Num == 2)
-    {
-      // 清除OLED屏幕内容，准备显示下一级菜单
-      OLED_Clear();
-      // 关闭第二级菜单显示标志
-      StartMenu2 = 0;
-      // 开启第三级菜单显示标志
-      StartMenu3 = 1;
-      // 保存当前选择的菜单项索引到SelectMenu3变量
-      SelectMenu3 = SetLoop;
-      // 重置选择索引，为下次显示菜单做准备
-      SetLoop = 1;
-      // 清除按键标志
-      Key_Num = 0;
-    }
-    
-    // 检查是否按下返回键(Key_Num为3)
-    if(Key_Num == 3)
-    {
-      // 清除OLED屏幕内容
-      OLED_Clear();
-      // 开启第一级菜单显示标志，返回到上一级菜单
-      StartMenu1 = 1;
-      // 关闭第二级菜单显示标志
-      StartMenu2 = 0;
-      // 重置选择索引
-      SetLoop = 1;
-      // 设置一级菜单需要重新初始化
-      Menu1_InitHandle = 1;
-      // 设置二级菜单需要重新初始化
-      Menu2_InitHandle = 1;
-      // 清除按键标志
-      Key_Num = 0;
-    }
+    // // 处理按键
+    //   if (Key_Num != 0) 
+    //   {
+    //       navigateMenu(Key_Num);
+    //   }
+    // }
     
     // 任务延时50ms，让出CPU给其他任务
     osDelay(50);
@@ -461,143 +306,224 @@ void vTaskMenu3(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    // 检查是否启用第三级菜单显示
-    if(StartMenu3 == 1)
-    {
-      // 根据第二级菜单的选择显示相应的第三级菜单内容
-      // 当第二级菜单选择为1时
-      if(SelectMenu3 == 1 && SelectMenu2 == 1)      
-      {
-        // 显示频率相关信息
-        OLED_ShowString(1,1,"Frequency");
-        OLED_ShowString(2,3,"72MHz");
-      }
-      
-      if(SelectMenu3 == 2 && SelectMenu2 == 1)      
-      {
-        // 显示外设相关信息
-        OLED_ShowString(1,1,"Peripheral");
-        OLED_ShowString(2,3,"1OLED");
-        OLED_ShowString(3,3,"3LED");
-        OLED_ShowString(4,3,"3Button");  
-      }
-  
-      if(SelectMenu3 == 3 && SelectMenu2 == 1)      
-      {
-        // 保留位，暂无功能
-      }
-                    
-      // 当第二级菜单选择为2时
-      if(SelectMenu3 == 1 && SelectMenu2 == 2)      
-      {
-        // 显示表情风格1
-        OLED_ShowString(1,1,"Cute");
-        OLED_ShowString(3,4,"('-'-*)");
-      }
-      
-      if(SelectMenu3 == 2 && SelectMenu2 == 2)      
-      {
-        // 显示表情风格2
-        OLED_ShowString(1,1,"Classic");
-        OLED_ShowString(3,4,"(^^*)");
-      }
-  
-      if(SelectMenu3 == 3 && SelectMenu2 == 2)      
-      {
-        // 显示表情风格3
-        OLED_ShowString(1,1,"Crazy");
-        OLED_ShowString(3,4,">(>_<)");
-      }
-                  
-      // 当第二级菜单选择为3时
-      if(SelectMenu3 == 1 && SelectMenu2 == 3)      
-      {
-        // 设置LED闪烁模式1
-        LED_mode = 1;
-        OLED_ShowString(1,1,"Storbe");
-        OLED_ShowString(3,3,"Watching...");
-      }
-      
-      if(SelectMenu3 == 2 && SelectMenu2 == 3)      
-      {
-        // 设置LED警告模式
-        LED_mode = 2;
-        OLED_ShowString(1,1,"Waring");
-        OLED_ShowString(3,3,"Watching...");  
-      }
-  
-      if(SelectMenu3 == 3 && SelectMenu2 == 3)      
-      {
-        // 设置LED不同速度模式
-        LED_mode = 3;
-        OLED_ShowString(1,1,"DiffSpeed");
-        OLED_ShowString(3,3,"Watching...");  
-      }
-                  
-      // 处理选择键（下一个）
-      if(Key_Num == 1)
-      {
-        // 根据循环标志设置不同的选项高亮显示
-        if(SetLoop == 1 && Key_Num == 1)
-        {
-          // 清除上一选项的高亮，高亮显示第二个选项
-          OLED_ShowString(2,2," ");  
-          OLED_ShowString(3,2,"*");  
-          OLED_ShowString(4,2," ");  
-          Key_Num = 0;
-          SetLoop ++;
-        }
+    // // 只在当前是第三级菜单时执行
+    // if (currentMenuLevel == 3) 
+    // {
 
-        if(SetLoop == 2 && Key_Num == 1)
-        {
-          // 清除上一选项的高亮，高亮显示第三个选项
-          OLED_ShowString(2,2," ");  
-          OLED_ShowString(3,2," ");  
-          OLED_ShowString(4,2,"*");  
-          Key_Num = 0;
-          SetLoop ++;
-        }
+    // // 使用getCurrentMenu获取当前活动菜单
+    //   MenuItem* currentMenu = getCurrentMenu();
+      
+    // // 显示菜单内容
+    //   if (currentMenu != NULL && menuNeedsInit[3] == 1) 
+    //   {
+    //     // 显示标题
+    //       OLED_ShowString(1, 1, currentMenu->title);
+          
+    //     // 显示内容
+    //       for (uint8_t i = 0; i < 4; i++) 
+    //       {
 
-        if(SetLoop == 3 && Key_Num == 1)
-        {
-          // 清除上一选项的高亮，高亮显示第一个选项（循环回顶部）
-          OLED_ShowString(2,2,"*");  
-          OLED_ShowString(3,2," ");  
-          OLED_ShowString(4,2," ");  
-          Key_Num = 0;
-          SetLoop = 1;
-        }
-      }
-    }
-                
-    // 处理确认键操作（此处保留位，暂无功能）
-    if(Key_Num == 2)
-    {
-    }
+    //         if (strlen((char*)currentMenu->content[i]) > 0) 
+    //         {
+
+    //           OLED_ShowString(i + 1, 3, currentMenu->content[i]);
+    //         }
+    //       }
+          
+    //       // 如果是LED相关菜单，设置LED模式
+    //       if (currentMenu->ledMode != 0) 
+    //       {
+    //         LED_mode = currentMenu->ledMode;
+
+    //       }
+          
+    //       menuNeedsInit[3] = 0;
+    //   }
+      
+    //   // 处理返回键
+    //   if (Key_Num == KEY_BACK) 
+    //   {
+    //     navigateMenu(KEY_BACK);
+    //   }
+
+    // }
     
-    // 处理返回键操作
-    if(Key_Num == 3)
-    {
-      // 清除OLED显示
-      OLED_Clear();
-      // 重置LED模式
-      LED_mode = 0;
-      // 启用第二级菜单显示
-      StartMenu2 = 1;                
-      // 关闭第三级菜单显示
-      StartMenu3 = 0;               
-      // 重置循环标志
-      SetLoop = 1;
-      // 标记第二级菜单需要初始化
-      Menu2_InitHandle = 1;           
-      // 清除按键状态
-      Key_Num = 0;
-    }
-                
     // 任务延时50ms
     osDelay(50);
   }
   /* USER CODE END vTaskMenu3 */
+}
+
+/* USER CODE BEGIN Header_vTaskKeyScan */
+/**
+* @brief Function implementing the KeyScan thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_vTaskKeyScan */
+void vTaskKeyScan(void *argument)
+{
+  /* USER CODE BEGIN vTaskKeyScan */
+  uint8_t row;
+	uint8_t received_val;  // 从队列接收的值（仅用于通知，实际值未使用）
+	uint8_t key_value = 0;   // 按键值（高4位表示行，低4位表示列）
+
+  /* Infinite loop */
+  for(;;)
+  {
+		// 等待从队列接收信号（由外部中断回调函数触发）
+		// portMAX_DELAY表示无限期等待
+      if(xQueueReceive(xKeyIntQueueHandle, &received_val, portMAX_DELAY) == pdPASS)
+      {
+        // 执行实际的矩阵键盘扫描
+        for( row =0; row < Rows; row++ )  // 遍历所有行
+        {
+          // 先将所有行置为低电平
+            HAL_GPIO_WritePin(row_1_GPIO_Port, row_1_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(row_2_GPIO_Port, row_2_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(row_3_GPIO_Port, row_3_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(row_4_GPIO_Port, row_4_Pin, GPIO_PIN_RESET);
+
+          // 将当前行置为高电平
+            switch (row)
+            {
+                case 0: HAL_GPIO_WritePin(row_1_GPIO_Port, row_1_Pin, GPIO_PIN_SET); break;
+                case 1: HAL_GPIO_WritePin(row_2_GPIO_Port, row_2_Pin, GPIO_PIN_SET); break;
+                case 2: HAL_GPIO_WritePin(row_3_GPIO_Port, row_3_Pin, GPIO_PIN_SET); break;
+                case 3: HAL_GPIO_WritePin(row_4_GPIO_Port, row_4_Pin, GPIO_PIN_SET); break;
+            }
+
+              osDelay(2);  // 短暂延时，确保电平稳定
+          
+          // 检测列引脚状态
+            if (HAL_GPIO_ReadPin(col_1_GPIO_Port, col_1_Pin) == GPIO_PIN_SET)
+            {
+                key_value = KeyMap[row][0];
+              // 将按键值发送到队列，供其他任务处理
+						  // 第三个参数0表示不等待，立即返回
+                xQueueSend(xKeyValueQueueHandle, &key_value, 0);
+                break;
+            }
+            else if (HAL_GPIO_ReadPin(col_2_GPIO_Port, col_2_Pin) == GPIO_PIN_SET)
+            {
+                key_value = KeyMap[row][1];
+                xQueueSend(xKeyValueQueueHandle, &key_value, 0);
+                break;
+            }
+            else if (HAL_GPIO_ReadPin(col_3_GPIO_Port, col_3_Pin) == GPIO_PIN_SET)
+            {
+                key_value = KeyMap[row][2];
+                xQueueSend(xKeyValueQueueHandle, &key_value, 0);
+                break;
+            }
+            else if (HAL_GPIO_ReadPin(col_4_GPIO_Port, col_4_Pin) == GPIO_PIN_SET)
+            {
+                key_value = KeyMap[row][3];
+                xQueueSend(xKeyValueQueueHandle, &key_value, 0);
+                break;
+            }
+
+
+        }
+
+      }
+    osDelay(1);
+  }
+  /* USER CODE END vTaskKeyScan */
+}
+
+/* USER CODE BEGIN Header_vTaskKeyProcess */
+/**
+* @brief Function implementing the KeyProcess thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_vTaskKeyProcess */
+void vTaskKeyProcess(void *argument)
+{
+  /* USER CODE BEGIN vTaskKeyProcess */
+
+  uint8_t received_key = 0;
+
+  /* Infinite loop */
+  for(;;)
+  {
+    // 等待从队列接收按键值
+    if(xQueueReceive(xKeyValueQueueHandle, &received_key, portMAX_DELAY) == pdPASS)
+    {
+      // 处理按键值
+      switch(received_key)
+      {
+        case '1':
+          // 处理按键1的逻辑
+          OLED_Clear();
+          osDelay(5);
+          OLED_ShowString(2, 1, "Hello Seviffer");
+					received_key = 0;
+          break;
+        case '2':
+          // 处理按键2的逻辑
+          OLED_Clear();
+					osDelay(5);
+          OLED_ShowString(2, 1, "Hello Sev2");
+					received_key = 0;
+          break;
+        case '3':
+          // 处理按键3的逻辑
+          OLED_Clear();
+          osDelay(5);
+          OLED_ShowString(2, 1, "Hello Sev3");
+					received_key = 0;
+          break;
+        case '4':
+          // 处理按键4的逻辑
+          OLED_Clear();
+          osDelay(5);
+          OLED_ShowString(2, 1, "Hello Sev4");
+					received_key = 0;
+          break;
+        case '5':
+          // 处理按键5的逻辑
+          OLED_Clear();
+          osDelay(5);
+          OLED_ShowString(2, 1, "Hello Sev5");
+					received_key = 0;
+          break;
+        case '6':
+          // 处理按键6的逻辑
+          OLED_Clear();
+          osDelay(5);
+          OLED_ShowString(2, 1, "Hello Sev6");
+					received_key = 0;
+          break;
+        case '7':
+          // 处理按键7的逻辑
+          OLED_Clear();
+          osDelay(5);
+          OLED_ShowString(2, 1, "Hello Sev7");
+					received_key = 0;
+          break;        
+        case '8':
+          // 处理按键8的逻辑
+          OLED_Clear();
+          osDelay(5);
+          OLED_ShowString(2, 1, "Hello Sev8");
+					received_key = 0;
+          break;  
+        case 'A':
+          // 处理按键9的逻辑
+          OLED_Clear();
+          osDelay(5);
+          OLED_ShowString(2, 1, "Hello Sev9");
+					received_key = 0;
+          break;
+
+        // 其他按键情况...
+      }
+    }
+    osDelay(10);
+  }
+  /* USER CODE END vTaskKeyProcess */
 }
 
 /* Private application code --------------------------------------------------*/

@@ -21,7 +21,7 @@ uint8_t Key_GetNum(void)
 		if( Key_Num )  //如果说Key_Num有东西，那么送出�?
 		{
 				temp = Key_Num;
-				Key_Num = 0;
+				Key_Num = 0 ;
 			  
 			  return temp;
 		}
@@ -51,7 +51,7 @@ uint8_t Key_GetState(void)
 }	
 
 
-void key_Tick(void) //申请定时中断调用 1ms进入1�?
+void key_Tick(void) //申�?�定时中�?调用 1ms进入1�?
 {
 		static uint8_t count;
 		static uint8_t CurrState,PrevState;
@@ -59,7 +59,7 @@ void key_Tick(void) //申请定时中断调用 1ms进入1�?
 		count++;
 		if(count >= 20)
 		{
-				 PrevState = CurrState;         // 存个档。按下等于各个按键该有的值。松手是0
+				 PrevState = CurrState;         // 存个档。按下等于各�?按键该有的值。松手是0
 			CurrState = Key_GetState();		
 			
 				if( CurrState == 0 && PrevState != 0 )

@@ -199,7 +199,7 @@ void EXTI9_5_IRQHandler(void)
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
 
   /* USER CODE END EXTI9_5_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(col_2_Pin);   // 调用HAL库的中断处理函数
+  HAL_GPIO_EXTI_IRQHandler(col_2_Pin);
   HAL_GPIO_EXTI_IRQHandler(col_3_Pin);
   HAL_GPIO_EXTI_IRQHandler(col_4_Pin);
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */

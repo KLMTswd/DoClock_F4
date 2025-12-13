@@ -87,7 +87,7 @@ osThreadId_t KeyScanHandle;
 const osThreadAttr_t KeyScan_attributes = {
   .name = "KeyScan",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+  .priority = (osPriority_t) osPriorityBelowNormal,
 };
 /* Definitions for KeyProcess */
 osThreadId_t KeyProcessHandle;
@@ -145,7 +145,7 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the queue(s) */
   /* creation of xKeyIntQueue */
-  xKeyIntQueueHandle = osMessageQueueNew (10, sizeof(uint16_t), &xKeyIntQueue_attributes);
+  xKeyIntQueueHandle = osMessageQueueNew (16, sizeof(uint16_t), &xKeyIntQueue_attributes);
 
   /* creation of xKeyValueQueue */
   xKeyValueQueueHandle = osMessageQueueNew (16, sizeof(uint16_t), &xKeyValueQueue_attributes);
@@ -216,34 +216,33 @@ void vTaskMenu1(void *argument)
 	osDelay(100);    
 	OLED_Init();				
 	OLED_Clear();
-  
+  OLED_ShowString(1, 1, "Hello MyFriend!");
 
   /* Infinite loop */
   for(;;)
   {
-    OLED_ShowString(1, 1, "Hello MyFriend!");
-    // // 只在当前是第一级菜单时执行
-    //   if (currentMenuLevel == 1) 
-    //   {
-    //   // 菜单初始化显示
-    //     if (menuNeedsInit[1] == 1) 
-    //     {      
-    //       // 使用通用函数显示菜单
-    //       displayMenu(&menuData[0], currentSelection);
+    // 只在当前是第一级菜单时执行
+       if (currentMenuLevel == 1) 
+       {
+       // 菜单初始化显示
+         if (menuNeedsInit[1] == 1) 
+         {      
+           // 使用通用函数显示菜单
+           displayMenu(&menuData[0], currentSelection);
 
-    //       // 标记第一级菜单已初始化
-    //       menuNeedsInit[1] = 0;      
+           // 标记第一级菜单已初始化
+           menuNeedsInit[1] = 0;      
 
-    //     }
+         }
         
-    //   // 处理按键
-    //     if (Key_Num != 0) 
-    //     {
-    //       // 使用通用导航函数处理菜单导航
-    //         navigateMenu(Key_Num);
+       // 处理按键
+         if (Key_Num != 0) 
+         {
+           // 使用通用导航函数处理菜单导航
+            navigateMenu(Key_Num);
 
-    //     }
-    //   }
+         }
+       }
             
       // 任务延时100ms，让出CPU给其他任务
       osDelay(100);
@@ -264,31 +263,32 @@ void vTaskMenu2(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    // // 只在当前是第二级菜单时执行
-    // if (currentMenuLevel == 2) 
-    // {
+     // 只在当前是第二级菜单时执行
+     if (currentMenuLevel == 2) 
+     {
 
-    // // 使用getCurrentMenu获取当前活动菜单
-    //   MenuItem* currentMenu = getCurrentMenu();
+     // 使用getCurrentMenu获取当前活动菜单
+       MenuItem* currentMenu = getCurrentMenu();
       
-    // // 菜单初始化显示
-    //   if (menuNeedsInit[2] == 1 && currentMenu != NULL) 
-    //   {
-    //     // 使用通用函数显示菜单
-    //       displayMenu(currentMenu, currentSelection);
-    //     // 标记第二级菜单已初始化
-    //       menuNeedsInit[2] = 0;
-    //   }
+     // 菜单初始化显示
+       if (menuNeedsInit[2] == 1 && currentMenu != NULL) 
+       {
+         // 使用通用函数显示菜单
+           displayMenu(currentMenu, currentSelection);
+         // 标记第二级菜单已初始化
+           menuNeedsInit[2] = 0;
+       }
       
-    // // 处理按键
-    //   if (Key_Num != 0) 
-    //   {
-    //       navigateMenu(Key_Num);
-    //   }
-    // }
-    
-    // 任务延时50ms，让出CPU给其他任务
-    osDelay(50);
+     // 处理按键
+         if (Key_Num != 0) 
+         {
+           // 使用通用导航函数处理菜单导航
+            navigateMenu(Key_Num);
+         }
+       }
+            
+      // 任务延时50ms，让出CPU给其他任务
+      osDelay(50);
   }
   /* USER CODE END vTaskMenu2 */
 }
@@ -306,47 +306,47 @@ void vTaskMenu3(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    // // 只在当前是第三级菜单时执行
-    // if (currentMenuLevel == 3) 
-    // {
+     // 只在当前是第三级菜单时执行
+     if (currentMenuLevel == 3) 
+     {
 
-    // // 使用getCurrentMenu获取当前活动菜单
-    //   MenuItem* currentMenu = getCurrentMenu();
+     // 使用getCurrentMenu获取当前活动菜单
+       MenuItem* currentMenu = getCurrentMenu();
       
-    // // 显示菜单内容
-    //   if (currentMenu != NULL && menuNeedsInit[3] == 1) 
-    //   {
-    //     // 显示标题
-    //       OLED_ShowString(1, 1, currentMenu->title);
+     // 显示菜单内容
+       if (currentMenu != NULL && menuNeedsInit[3] == 1) 
+       {
+         // 显示标题
+           OLED_ShowString(1, 1, currentMenu->title);
           
-    //     // 显示内容
-    //       for (uint8_t i = 0; i < 4; i++) 
-    //       {
+         // 显示内容
+           for (uint8_t i = 0; i < 4; i++) 
+           {
 
-    //         if (strlen((char*)currentMenu->content[i]) > 0) 
-    //         {
+             if (strlen((char*)currentMenu->content[i]) > 0) 
+             {
 
-    //           OLED_ShowString(i + 1, 3, currentMenu->content[i]);
-    //         }
-    //       }
+               OLED_ShowString(i + 1, 3, currentMenu->content[i]);
+             }
+           }  
           
-    //       // 如果是LED相关菜单，设置LED模式
-    //       if (currentMenu->ledMode != 0) 
-    //       {
-    //         LED_mode = currentMenu->ledMode;
+           // 如果是LED相关菜单，设置LED模式
+           if (currentMenu->ledMode != 0) 
+           {
+             LED_mode = currentMenu->ledMode;
 
-    //       }
+           }
           
-    //       menuNeedsInit[3] = 0;
-    //   }
+           menuNeedsInit[3] = 0;
+       }
       
-    //   // 处理返回键
-    //   if (Key_Num == KEY_BACK) 
-    //   {
-    //     navigateMenu(KEY_BACK);
-    //   }
+     // 处理返回键
+         if (Key_Num == KEY_BACK) 
+         {
+           navigateMenu(KEY_BACK);
+         }
 
-    // }
+     }
     
     // 任务延时50ms
     osDelay(50);
@@ -393,41 +393,43 @@ void vTaskKeyScan(void *argument)
                 case 3: HAL_GPIO_WritePin(row_4_GPIO_Port, row_4_Pin, GPIO_PIN_SET); break;
             }
 
-              osDelay(2);  // 短暂延时，确保电平稳定
+              osDelay(10);  // 短暂延时，确保电平稳定
           
           // 检测列引脚状态
             if (HAL_GPIO_ReadPin(col_1_GPIO_Port, col_1_Pin) == GPIO_PIN_SET)
             {
                 key_value = KeyMap[row][0];
               // 将按键值发送到队列，供其他任务处理
-						  // 第三个参数0表示不等待，立即返回
-                xQueueSend(xKeyValueQueueHandle, &key_value, 0);
+                xQueueSend(xKeyValueQueueHandle, &key_value, portMAX_DELAY);
                 break;
             }
             else if (HAL_GPIO_ReadPin(col_2_GPIO_Port, col_2_Pin) == GPIO_PIN_SET)
             {
                 key_value = KeyMap[row][1];
-                xQueueSend(xKeyValueQueueHandle, &key_value, 0);
+                xQueueSend(xKeyValueQueueHandle, &key_value, portMAX_DELAY);
                 break;
             }
             else if (HAL_GPIO_ReadPin(col_3_GPIO_Port, col_3_Pin) == GPIO_PIN_SET)
             {
                 key_value = KeyMap[row][2];
-                xQueueSend(xKeyValueQueueHandle, &key_value, 0);
+                xQueueSend(xKeyValueQueueHandle, &key_value, portMAX_DELAY);
                 break;
             }
             else if (HAL_GPIO_ReadPin(col_4_GPIO_Port, col_4_Pin) == GPIO_PIN_SET)
             {
                 key_value = KeyMap[row][3];
-                xQueueSend(xKeyValueQueueHandle, &key_value, 0);
+                xQueueSend(xKeyValueQueueHandle, &key_value, portMAX_DELAY);
                 break;
             }
 
-
         }
 
+        HAL_GPIO_WritePin(row_1_GPIO_Port, row_1_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(row_2_GPIO_Port, row_2_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(row_3_GPIO_Port, row_3_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(row_4_GPIO_Port, row_4_Pin, GPIO_PIN_SET);
+
       }
-    osDelay(1);
   }
   /* USER CODE END vTaskKeyScan */
 }

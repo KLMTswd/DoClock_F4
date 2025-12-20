@@ -166,6 +166,12 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
+  /**
+   * 调用 HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) 将 RCC_ClkInitStruct 中
+   * 的时钟配置应用到硬件并将 Flash 访问延迟设置为 0（FLASH_LATENCY_0，适用于较低频率）。
+   * HAL_RCC_ClockConfig 返回 HAL_StatusTypeDef：在成功时返回 HAL_OK。
+   * 该 if 判断返回值是否不等于 HAL_OK，即检测时钟/Flash 配置是否失败；若失败，随后应执行相应的错误处理逻辑。
+   */
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
   {
     Error_Handler();

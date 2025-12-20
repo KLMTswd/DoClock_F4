@@ -215,7 +215,7 @@ void vTaskMenu1(void *argument)
 
 	osDelay(100);    
 	OLED_Init();				
-	OLED_Clear();
+	menu_Init();
   OLED_ShowString(1, 1, "Hello MyFriend!");
 
   /* Infinite loop */

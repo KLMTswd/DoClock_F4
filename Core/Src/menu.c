@@ -16,11 +16,11 @@ uint8_t LED_mode = 0;          // LED工作模式
 uint8_t menuStack[3] = {0, 0, 0};  // 菜单选择栈，用于记录用户的选择路径
 uint8_t stackPointer = 0;         // 栈指针
 
-// 菜单数据数组定义
 
+// 菜单数据数组定义  只有3个 menuData[0]  menuData[1]  menuData[2]
 MenuItem menuData[3] = 
 {
-  // 主菜单（第一级）
+  // 主菜单（第一级） menuData[0]
     {
       .title = "STM32f103c8t6",
       .content = {{"1.configurtion"}, {"2.kaomoji"}, {"3.LED showtime"}, {""}},
@@ -28,14 +28,14 @@ MenuItem menuData[3] =
       .nextLevel = 2
     },
 
-  // 配置子菜单（第二级）
+  // 配置子菜单（第二级） menuData[1]
     {
       .title = "Configuration",
       .content = {{"1.frequency"}, {"2.peripheral"}, {""}, {""}},
       .itemCount = 2,
       .nextLevel = 3
     },  
-  // 颜文字子菜单（第二级）
+  // 颜文字子菜单（第二级） 
     {
       .title = "Kaomoji",
       .content = {{"1.cute"}, {"2.classic"}, {"3.crazy"}, {""}},
@@ -309,3 +309,19 @@ void resetMenuSystem()
 }
 
 
+void menu_Init(void) 
+{
+    currentMenuLevel = 1;      // 从"无菜单"状态进入"主菜单"
+    currentSelection = 1;      // 选中第一项
+    stackPointer = 0;          // 栈指针归零
+    LED_mode = 0;              // 重置LED模式
+    
+    // 标记所有菜单都需要初始化
+    for (uint8_t i = 0; i < 4; i++) 
+    {
+        menuNeedsInit[i] = 1;
+    }
+    
+    // 清屏
+    OLED_Clear();
+}

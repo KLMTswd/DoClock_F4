@@ -131,12 +131,12 @@ void OLED_Clear(void)
 void OLED_ShowChar(uint8_t Line, uint8_t Column, char Char)
 {      	
 	uint8_t i;
-	OLED_SetCursor((Line - 1) * 2, (Column - 1) * 8);		//璁剧疆鍏夋爣浣嶇疆鍦ㄤ笂鍗婇儴鍒?
+	OLED_SetCursor((Line - 1) * 2, (Column - 1) * 8);		//璁剧疆鍏夋爣浣嶇疆鍦?
 	for (i = 0; i < 8; i++)
 	{
 		OLED_WriteData(OLED_F8x16[Char - ' '][i]);			//鏄剧ず涓婂崐閮ㄥ垎鍐呭
 	}
-	OLED_SetCursor((Line - 1) * 2 + 1, (Column - 1) * 8);	//璁剧疆鍏夋爣浣嶇疆鍦ㄤ笅鍗婇儴鍒?
+	OLED_SetCursor((Line - 1) * 2 + 1, (Column - 1) * 8);	//璁剧疆鍏夋爣浣嶇疆鍦?
 	for (i = 0; i < 8; i++)
 	{
 		OLED_WriteData(OLED_F8x16[Char - ' '][i + 8]);		//鏄剧ず涓嬪崐閮ㄥ垎鍐呭
@@ -173,21 +173,28 @@ uint32_t OLED_Pow(uint32_t X, uint32_t Y)
 	return Result;
 }
 
+
 /**
-  * @brief  OLED鏄剧ず鏁板瓧锛堝崄杩涘埗锛屾鏁帮級
-  * @param  Line 璧峰琛屼綅缃紝鑼冨洿锛?1~4
-  * @param  Column 璧峰鍒椾綅缃紝鑼冨洿锛?1~16
-  * @param  Number 瑕佹樉绀虹殑鏁板瓧锛岃寖鍥达細0~4294967295
-  * @param  Length 瑕佹樉绀烘暟瀛楃殑闀垮害锛岃寖鍥达細1~10
-  * @retval 鏃?
+  * @brief  OLED显示十进制正整数
+  * @param  Line     起始行位置，范围：1~4
+  * @param  Column   起始列位置，范围：1~16
+  * @param  Number   要显示的数字，范围：0~4294967295
+  * @param  Length   要显示数字的长度，范围：1~10
+  * @retval 无
   */
 void OLED_ShowNum(uint8_t Line, uint8_t Column, uint32_t Number, uint8_t Length)
 {
-	uint8_t i;
-	for (i = 0; i < Length; i++)							
-	{
-		OLED_ShowChar(Line, Column + i, Number / OLED_Pow(10, Length - i - 1) % 10 + '0');
-	}
+    uint8_t i;  // 循环计数器，用于控制显示的位数
+    
+    // 循环显示每一位数字，共显示Length位
+    for (i = 0; i < Length; i++)                            
+    {
+        // 计算当前位的数字：
+        // 1. Number / OLED_Pow(10, Length - i - 1) - 得到当前位及更高位的数字
+        // 2. % 10 - 取模10得到当前位的数字
+        // 3. + '0' - 转换为ASCII字符
+        OLED_ShowChar(Line, Column + i, Number / OLED_Pow(10, Length - i - 1) % 10 + '0');
+    }
 }
 
 /**
@@ -388,4 +395,3 @@ void OLED_ClearArea(uint8_t StartLine, uint8_t StartColumn, uint8_t EndLine, uin
         }
     }
 }
-

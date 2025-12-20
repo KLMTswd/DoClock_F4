@@ -61,4 +61,8 @@ MenuItem* getCurrentMenu(void);
 // 重置菜单系统
 void resetMenuSystem(void);
 
+//初始化我们的菜单系统
+void menu_Init(void);
+
+
 #endif /* MENU_H */
